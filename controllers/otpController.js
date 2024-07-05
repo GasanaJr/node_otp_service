@@ -1,9 +1,19 @@
 const Otp = require('../models/otpModel');
 const crypto = require('crypto');
+require('dotenv').config();
 
 function generateOtp() {
   return crypto.randomInt(100000, 999999).toString();
 }
+
+// Nodemailer
+const transporter = nodemailer.createTransport({
+    service: "hotmail",
+    auth: {
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD,
+    },
+  });
 
 exports.requestOtp = async (req, res) => {
   const { recipient } = req.body;
@@ -13,6 +23,14 @@ exports.requestOtp = async (req, res) => {
   await otp.save();
 
   console.log(`Sending OTP ${code} to ${recipient}`);
+  const mailOptions = {
+    from: process.env.EMAIL,
+    to: recipient,
+    subject: "Your OTP verification code",
+    text: `Your verification code is ${code}`,
+  };
+
+  await transporter.sendMail(mailOptions);
 
   res.status(200).send({ message: 'OTP sent successfully' });
 };
